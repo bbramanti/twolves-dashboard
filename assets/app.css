@@ -1,0 +1,58 @@
+html, body, #outer, #react-entry-point, #_dash-global-error-container, #_dash-global-error-container > div,
+#_dash-global-error-container > div > div:not(.dash-debug-menu__outer, .dash-debug-menu__outer--closed, .ash-debug-menu, .dash-debug-menu--closed),
+#_dash-global-error-container > div > div > div, #_dash-global-error-container > div > div > div > #_dash-app-content {
+  padding: 0px;
+  margin: 0px;
+  width: 100%;
+  height: 100%;
+  font-family: 'Roboto', sans-serif;;
+}
+#outer {
+  display: flex;
+  flex-direction: column;
+}
+#inner-1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 25%;
+  background-color: #0c2340;
+}
+#logo {
+  max-height: 50%;
+}
+#inner-2 {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: #78be20;
+  padding-bottom: 10px;
+  align-items: center;
+  justify-content: center;
+}
+.dash-dropdown {
+  flex: 1;
+  width: 25%;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+[class^="Select"]:not(.Select-arrow){
+  background-color: RGB(17,17,17)!important;
+  color: white!important;
+  border-color: black!important;
+  border-radius: 8px;
+}
+.Select-arrow {
+  border-color: white transparent transparent;
+}
+.dash-graph {
+  width: 75%;
+  border-radius: 8px!important;
+}
+.chart-title {
+  background-color: RGB(17,17,17);
+  color: white;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px;
+}
