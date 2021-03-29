@@ -6,7 +6,6 @@ import dash_html_components as html
 from dash.dependencies import Output, Input
 import plotly.express as px
 import random
-import logging
 
 # read dataset into pandas dataframe from csv file
 data = pd.read_csv("./data/ytd_timberwolves_player_boxscore.csv")
@@ -183,5 +182,4 @@ def update_charts(player):
     return pts_fig, ast_fig, reb_fig
 
 if __name__ == "__main__":
-    logging.info("running application ...")
     app.run_server(debug=False)

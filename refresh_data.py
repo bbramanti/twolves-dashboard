@@ -7,7 +7,7 @@ from nba_api.stats.endpoints import boxscoretraditionalv2, teamgamelog
 from dateutil.parser import parse
 
 # configure logger
-# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 # log to signal beginning of function execution
 logging.info("BEGINNING REFRESH_DATA JOB AT {}".format(datetime.datetime.now()))
