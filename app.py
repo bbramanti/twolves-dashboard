@@ -183,4 +183,5 @@ def update_charts(player):
     return pts_fig, ast_fig, reb_fig
 
 if __name__ == "__main__":
+    logging.info("running application ...")
     app.run_server(debug=False)
