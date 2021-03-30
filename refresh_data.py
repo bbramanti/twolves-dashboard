@@ -20,17 +20,8 @@ logging.info("num records in games pulled: {}".format(len(curr_games_pulled)))
 curr_player_boxscore = pd.read_csv('./data/ytd_timberwolves_player_boxscore.csv')
 logging.info("num records in player boxscore: {}".format(len(curr_player_boxscore)))
 
-# calls nba api to get teams data
-# retry a maximum of 5 times, waiting 5 seconds between each retry
-@retry(stop_max_attempt_number=5, wait_fixed=5000)
-def get_teams_data():
-    logging.info("trying to get teams data ...")
-    return teams.get_teams()
-
-# get all teams data
-teams_data = get_teams_data()
-
 # get Minnesota Timberwolves Team ID
+teams_data = teams.get_teams()
 minnesota_timberwolves_id = [team for team in teams_data if team['abbreviation'] == 'MIN'][0]['id']
 logging.info("team id: {}".format(minnesota_timberwolves_id))
 
@@ -40,8 +31,9 @@ logging.info("team id: {}".format(minnesota_timberwolves_id))
 def get_team_game_log(team_id, year):
     logging.info("trying to get team's game log...")
     return teamgamelog.TeamGameLog(
-        team_id = team_id,
-        season = year
+        team_id=team_id,
+        season=year,
+        timeout=100
     ).get_data_frames()[0]
 
 # get timberwolves game log
@@ -78,7 +70,7 @@ if not timberwolves_games_2020_2021.empty:
     # pull each game and append results to dataframe
     for index, game in timberwolves_games_2020_2021.iterrows():
         logging.info("pulling {} from {} with id {}".format(game['MATCHUP'], game['GAME_DATE'], game['GAME_ID']))
-        game_instance = boxscoretraditionalv2.BoxScoreTraditionalV2(game_id = game['GAME_ID']).get_data_frames()[0]
+        game_instance = boxscoretraditionalv2.BoxScoreTraditionalV2(game_id=game['GAME_ID']).get_data_frames()[0]
         boxscores = boxscores.append(game_instance)
         time.sleep(5)
 
