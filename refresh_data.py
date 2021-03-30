@@ -34,11 +34,18 @@ teams_data = get_teams_data()
 minnesota_timberwolves_id = [team for team in teams_data if team['abbreviation'] == 'MIN'][0]['id']
 logging.info("team id: {}".format(minnesota_timberwolves_id))
 
-# using Team ID pull all games from 2020-2021 Season
-timberwolves_games_2020_2021 = teamgamelog.TeamGameLog(
-    team_id = minnesota_timberwolves_id,
-    season = '2020'
-).get_data_frames()[0]
+# calls nba api to get team's game log
+# retry a maximum of 5 times, waiting 5 seconds between each retry
+@retry(stop_max_attempt_number=5, wait_fixed=5000)
+def get_team_game_log(team_id, year):
+    logging.info("trying to get team's game log...")
+    return teamgamelog.TeamGameLog(
+        team_id = team_id,
+        season = year
+    ).get_data_frames()[0]
+
+# get timberwolves game log
+timberwolves_games_2020_2021 = get_team_game_log(team_id=minnesota_timberwolves_id, year="2020")
 
 # select only neccessary data
 timberwolves_games_2020_2021 = timberwolves_games_2020_2021[['Game_ID', 'GAME_DATE', 'MATCHUP', 'WL']]
