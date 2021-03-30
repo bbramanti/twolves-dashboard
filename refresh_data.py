@@ -7,6 +7,12 @@ from nba_api.stats.endpoints import boxscoretraditionalv2, teamgamelog
 from dateutil.parser import parse
 from retrying import retry
 
+# hardcode user-agent header
+headers = {
+    'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',
+    'x-nba-stats-origin': 'stats'
+}
+
 # configure logger
 logging.basicConfig(level=logging.INFO)
 
@@ -26,13 +32,14 @@ minnesota_timberwolves_id = [team for team in teams_data if team['abbreviation']
 logging.info("team id: {}".format(minnesota_timberwolves_id))
 
 # calls nba api to get team's game log
-# retry a maximum of 5 times, waiting 5 seconds between each retry
-@retry(stop_max_attempt_number=5, wait_fixed=5000)
+# retry a maximum of 3 times, waiting 5 seconds between each retry
+@retry(stop_max_attempt_number=3, wait_fixed=5000)
 def get_team_game_log(team_id, year):
     logging.info("trying to get team's game log...")
     return teamgamelog.TeamGameLog(
         team_id=team_id,
         season=year,
+        headers=headers,
         timeout=100
     ).get_data_frames()[0]
 
@@ -70,7 +77,7 @@ if not timberwolves_games_2020_2021.empty:
     # pull each game and append results to dataframe
     for index, game in timberwolves_games_2020_2021.iterrows():
         logging.info("pulling {} from {} with id {}".format(game['MATCHUP'], game['GAME_DATE'], game['GAME_ID']))
-        game_instance = boxscoretraditionalv2.BoxScoreTraditionalV2(game_id=game['GAME_ID']).get_data_frames()[0]
+        game_instance = boxscoretraditionalv2.BoxScoreTraditionalV2(game_id=game['GAME_ID'], headers=headers).get_data_frames()[0]
         boxscores = boxscores.append(game_instance)
         time.sleep(5)
 
