@@ -5,6 +5,7 @@ import datetime
 from nba_api.stats.static import teams
 from nba_api.stats.endpoints import boxscoretraditionalv2, teamgamelog
 from dateutil.parser import parse
+from retrying import retry
 
 # configure logger
 logging.basicConfig(level=logging.INFO)
@@ -15,15 +16,23 @@ logging.info("BEGINNING REFRESH_DATA JOB AT {}".format(datetime.datetime.now()))
 # read in current state of both csv files
 # GAME_ID field may have leading zeroes, so read in as string
 curr_games_pulled = pd.read_csv('./data/ytd_timberwolves_games_pulled.csv', dtype={'GAME_ID':str})
-logging.info("num records in games pulled: ".format(len(curr_games_pulled)))
+logging.info("num records in games pulled: {}".format(len(curr_games_pulled)))
 curr_player_boxscore = pd.read_csv('./data/ytd_timberwolves_player_boxscore.csv')
-logging.info("num records in player boxscore: ".format(len(curr_games_pulled)))
+logging.info("num records in player boxscore: {}".format(len(curr_player_boxscore)))
+
+# calls nba api to get teams data
+# retry a maximum of 5 times, waiting 5 seconds between each retry
+@retry(stop_max_attempt_number=5, wait_fixed=5000)
+def get_teams_data():
+    logging.info("trying to get teams data ...")
+    return teams.get_teams()
 
 # get all teams data
-teams_data = teams.get_teams()
+teams_data = get_teams_data()
 
 # get Minnesota Timberwolves Team ID
 minnesota_timberwolves_id = [team for team in teams_data if team['abbreviation'] == 'MIN'][0]['id']
+logging.info("team id: {}".format(minnesota_timberwolves_id))
 
 # using Team ID pull all games from 2020-2021 Season
 timberwolves_games_2020_2021 = teamgamelog.TeamGameLog(
