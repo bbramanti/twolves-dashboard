@@ -5,7 +5,7 @@ html, body, #outer, #react-entry-point, #_dash-global-error-container, #_dash-gl
   margin: 0px;
   width: 100%;
   height: 100%;
-  font-family: 'Roboto', sans-serif;;
+  font-family: 'Roboto', sans-serif;
 }
 #outer {
   display: flex;
@@ -46,6 +46,10 @@ html, body, #outer, #react-entry-point, #_dash-global-error-container, #_dash-gl
   border-color: white transparent transparent;
 }
 .dash-graph {
+  width: 75%;
+  border-radius: 8px!important;
+}
+.dash-table-container {
   width: 75%;
   border-radius: 8px!important;
 }

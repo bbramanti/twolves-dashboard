@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import dash
+import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Output, Input
@@ -12,8 +13,14 @@ data = pd.read_csv("./data/ytd_timberwolves_player_boxscore.csv")
 # convert DATE field into datetime field (necessary to work with line charts)
 data["DATE"] = pd.to_datetime(data["DATE"], format="%m/%d/%Y")
 # add % into data
-data["FG-PCT"] = data["FGM"]/data["FGA"]
-data["3-PCT"] = data["3PM"]/data["3PA"]
+data["FG-PCT"] = round(data["FGM"]/data["FGA"] * 100, 1)
+data["3-PCT"] = round(data["3PM"]/data["3PA"] * 100, 1)
+# position new columns
+data.insert(9, 'FG-PCT', data.pop('FG-PCT'))
+data.insert(12, '3-PCT', data.pop('3-PCT'))
+
+# create game list
+game_list = data[["DATE", "MATCHUP"]].drop_duplicates(['DATE','MATCHUP'], keep='last')
 
 # initialize app
 app = dash.Dash(__name__)
@@ -36,6 +43,39 @@ app.layout = html.Div(
         html.Div(
             id = "inner-2",
             children = [
+                html.H1(className="chart-title", children=["BOX SCORES"]),
+                dcc.Dropdown(
+                    id = "game-filter",
+                    options = [
+                        {"label": matchup + " (" + date.strftime("%b %d, %Y") + ")", "value": date.strftime("%m/%d/%Y") + "," + matchup}
+                        for date, matchup in game_list.values
+                    ],
+                    value = "12/23/2020,MIN vs. DET",
+                    clearable = False,
+                    className = "dropdown"
+                ),
+                dash_table.DataTable(
+                    id='game-table',
+                    columns=[{"name": i, "id": i} for i in data.columns],
+                    style_header={
+                        'backgroundColor': 'rgb(17, 17, 17)'
+                    },
+                    style_cell={
+                        'backgroundColor': 'rgb(17, 17, 17)',
+                        'color': 'white',
+                        'textAlign': 'left'
+                    },
+                    style_data_conditional=[
+                        {
+                            "if": {"state": "selected"},
+                            "backgroundColor": "rgb(17, 17, 17)",
+                            "border": "1px solid #78be20",
+                        }
+                    ],
+                    style_table={'overflowX': 'auto'},
+                    sort_action="native",
+                    sort_mode="multi"
+                ),
                 html.H1(className="chart-title", children=["PTS / AST / REB"]),
                 dcc.Dropdown(
                     id = "player-filter",
@@ -181,5 +221,39 @@ def update_charts(player):
     )
     return pts_fig, ast_fig, reb_fig
 
+@app.callback(
+    [Output("game-table", "data"), Output("game-table", "style_data_conditional")],
+    Input("game-filter", "value")
+)
+def update_table(game):
+    date,matchup = game.split(",")
+    filtered_data = data[(data["MATCHUP"] == matchup) & (data["DATE"] == date)].sort_values(by=['PLAYER'])
+    # change date so in web view it doesn't display like 2020-12-23T00:00:00 instead 12/23/2020
+    filtered_data["DATE"] = filtered_data["DATE"].dt.strftime("%m/%d/%Y")
+    style_data_conditional=[
+        {
+            "if": {"state": "selected"},
+            "backgroundColor": "inherit !important",
+            "border": "inherit !important",
+        },
+
+        {
+            'if': {
+                'filter_query': '{{PLUS-MINUS}} = {}'.format(filtered_data['PLUS-MINUS'].max()),
+                'column_id': 'PLUS-MINUS'
+            },
+            "color": "green",
+        },
+
+        {
+            'if': {
+                'filter_query': '{{PLUS-MINUS}} = {}'.format(filtered_data['PLUS-MINUS'].min()),
+                'column_id': 'PLUS-MINUS'
+            },
+            "color": "red",
+        },
+    ]
+    return filtered_data.to_dict('records'), style_data_conditional
+
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
