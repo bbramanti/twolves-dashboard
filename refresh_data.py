@@ -15,7 +15,8 @@ logging.info("BEGINNING REFRESH_DATA JOB AT {}".format(datetime.datetime.now()))
 
 # read in current state of both csv files
 # GAME_ID field may have leading zeroes, so read in as string
-curr_games_pulled = pd.read_csv('./data/ytd_timberwolves_games_pulled.csv', dtype={'GAME_ID':str})
+# if season field is not read in as string, will cause issues when dropping duplicates later in script
+curr_games_pulled = pd.read_csv('./data/ytd_timberwolves_games_pulled.csv', dtype={'GAME_ID':str, 'SEASON':str})
 logging.info("num records in games pulled: {}".format(len(curr_games_pulled)))
 curr_player_boxscore = pd.read_csv('./data/ytd_timberwolves_player_boxscore.csv')
 logging.info("num records in player boxscore: {}".format(len(curr_player_boxscore)))
@@ -36,15 +37,18 @@ def get_team_game_log(team_id, year):
     ).get_data_frames()[0]
 
 # get timberwolves game log
-timberwolves_games_2020_2021 = get_team_game_log(team_id=minnesota_timberwolves_id, year="2020")
+pull_year = "2020"
+timberwolves_games_2020_2021 = get_team_game_log(team_id=minnesota_timberwolves_id, year=pull_year)
+
+# add 'SEASON' column to separate seasons
+timberwolves_games_2020_2021['SEASON'] = pull_year
 
 # select only neccessary data
-timberwolves_games_2020_2021 = timberwolves_games_2020_2021[['Game_ID', 'GAME_DATE', 'MATCHUP', 'WL']]
+timberwolves_games_2020_2021 = timberwolves_games_2020_2021[['Game_ID', 'GAME_DATE', 'SEASON', 'MATCHUP', 'WL']]
 
 # fix column names
 timberwolves_games_2020_2021.rename(
     columns={
-        'Team_ID': "TEAM_ID",
         'Game_ID': 'GAME_ID'
     },
     inplace=True
@@ -57,9 +61,9 @@ timberwolves_games_2020_2021['GAME_DATE'] = timberwolves_games_2020_2021.apply(l
 timberwolves_games_2020_2021.sort_values(by=['GAME_ID'], inplace=True)
 
 # remove all records from timberwolves_games_2020_2021 that exist in curr_games_pulled
-
 timberwolves_games_2020_2021 = pd.concat([timberwolves_games_2020_2021,curr_games_pulled]).drop_duplicates(keep=False)
 logging.info("pulling {} new games".format(len(timberwolves_games_2020_2021)))
+print(timberwolves_games_2020_2021.sort_values(by=['GAME_ID']))
 
 if not timberwolves_games_2020_2021.empty:
 
