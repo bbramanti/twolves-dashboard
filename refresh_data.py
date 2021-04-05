@@ -63,7 +63,6 @@ timberwolves_games_2020_2021.sort_values(by=['GAME_ID'], inplace=True)
 # remove all records from timberwolves_games_2020_2021 that exist in curr_games_pulled
 timberwolves_games_2020_2021 = pd.concat([timberwolves_games_2020_2021,curr_games_pulled]).drop_duplicates(keep=False)
 logging.info("pulling {} new games".format(len(timberwolves_games_2020_2021)))
-print(timberwolves_games_2020_2021.sort_values(by=['GAME_ID']))
 
 if not timberwolves_games_2020_2021.empty:
 
