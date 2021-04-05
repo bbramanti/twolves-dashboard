@@ -19,7 +19,7 @@ data["3-PCT"] = round(data["3PM"]/data["3PA"] * 100, 1)
 data.insert(9, 'FG-PCT', data.pop('FG-PCT'))
 data.insert(12, '3-PCT', data.pop('3-PCT'))
 
-# create game list
+# create game list, used in dropdown menu
 game_list = data[["DATE", "MATCHUP"]].drop_duplicates(['DATE','MATCHUP'], keep='last')
 
 # initialize app
@@ -256,4 +256,4 @@ def update_table(game):
     return filtered_data.to_dict('records'), style_data_conditional
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
