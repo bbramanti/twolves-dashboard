@@ -29,6 +29,7 @@ losses = len(games_pulled[(games_pulled['SEASON'] == '2020') & (games_pulled['WL
 
 # initialize app
 app = dash.Dash(__name__)
+app.title = "Timberwolves Dashboard"
 # server variable needed for procfile
 server = app.server
 
@@ -36,6 +37,10 @@ server = app.server
 app.layout = html.Div(
     id = "outer",
     children = [
+        html.Meta(
+            name="viewport",
+            content="width=device-width, initial-scale=1.0"
+        ),
         html.Div(
             id = "inner-1",
             children = [
