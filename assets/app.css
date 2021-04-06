@@ -60,3 +60,11 @@ html, body, #outer, #react-entry-point, #_dash-global-error-container, #_dash-gl
   padding: 10px;
   margin: 10px;
 }
+.record-title {
+  background-color: RGB(17,17,17);
+  color: white;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 0px;
+  margin-top: 10px;
+}

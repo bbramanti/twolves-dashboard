@@ -22,6 +22,11 @@ data.insert(12, '3-PCT', data.pop('3-PCT'))
 # create game list, used in dropdown menu
 game_list = data[["DATE", "MATCHUP"]].drop_duplicates(['DATE','MATCHUP'], keep='last')
 
+# create team record
+games_pulled = pd.read_csv("./data/ytd_timberwolves_games_pulled.csv", dtype={'SEASON':str})
+wins = len(games_pulled[(games_pulled['SEASON'] == '2020') & (games_pulled['WL'] == 'W')])
+losses = len(games_pulled[(games_pulled['SEASON'] == '2020') & (games_pulled['WL'] == 'L')])
+
 # initialize app
 app = dash.Dash(__name__)
 # server variable needed for procfile
@@ -156,7 +161,8 @@ app.layout = html.Div(
                             )
                             )
                     )
-                )
+                ),
+                html.H1(className="record-title", children=["Record: ({} - {})".format(wins, losses)]),
             ]
         )
     ]
