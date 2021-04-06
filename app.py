@@ -37,10 +37,7 @@ server = app.server
 app.layout = html.Div(
     id = "outer",
     children = [
-        html.Meta(
-            name="viewport",
-            content="width=device-width, initial-scale=1.0"
-        ),
+        html.Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
         html.Div(
             id = "inner-1",
             children = [
@@ -62,6 +59,7 @@ app.layout = html.Div(
                     ],
                     value = "12/23/2020,MIN vs. DET",
                     clearable = False,
+                    searchable=False,
                     className = "dropdown"
                 ),
                 dash_table.DataTable(
@@ -95,6 +93,7 @@ app.layout = html.Div(
                     ],
                     value = "Anthony Edwards",
                     clearable = False,
+                    searchable=False,
                     className = "dropdown"
                 ),
                 dcc.Graph(id="points-chart"),

@@ -47,11 +47,9 @@ html, body, #outer, #react-entry-point, #_dash-global-error-container, #_dash-gl
 }
 .dash-graph {
   width: 75%;
-  border-radius: 8px!important;
 }
 .dash-table-container {
   width: 75%;
-  border-radius: 8px!important;
 }
 .chart-title {
   background-color: RGB(17,17,17);
@@ -67,4 +65,22 @@ html, body, #outer, #react-entry-point, #_dash-global-error-container, #_dash-gl
   padding: 10px;
   margin-bottom: 0px;
   margin-top: 10px;
+}
+/* Style Mobile Devices (phone / tablet) */
+@media (max-width: 1024px) {
+  .dash-dropdown {
+    width: 50%;
+  }
+  .dash-table-container {
+    width: 95%;
+  }
+  .dash-graph {
+    width: 95%;
+  }
+  #inner-1 {
+    height: 20%;
+  }
+  #logo {
+    height: 50%;
+  }
 }
