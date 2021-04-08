@@ -9,7 +9,7 @@ import plotly.express as px
 import random
 
 # read dataset into pandas dataframe from csv file
-data = pd.read_csv("./data/ytd_timberwolves_player_boxscore.csv")
+data = pd.read_csv("./data/timberwolves/ytd_timberwolves_player_boxscore.csv")
 # convert DATE field into datetime field (necessary to work with line charts)
 data["DATE"] = pd.to_datetime(data["DATE"], format="%m/%d/%Y")
 # add % into data
@@ -23,13 +23,13 @@ data.insert(12, '3-PCT', data.pop('3-PCT'))
 game_list = data[["DATE", "MATCHUP"]].drop_duplicates(['DATE','MATCHUP'], keep='last')
 
 # create team record
-games_pulled = pd.read_csv("./data/ytd_timberwolves_games_pulled.csv", dtype={'SEASON':str})
+games_pulled = pd.read_csv("./data/timberwolves/ytd_timberwolves_games_pulled.csv", dtype={'SEASON':str})
 wins = len(games_pulled[(games_pulled['SEASON'] == '2020') & (games_pulled['WL'] == 'W')])
 losses = len(games_pulled[(games_pulled['SEASON'] == '2020') & (games_pulled['WL'] == 'L')])
 
 # initialize app
 app = dash.Dash(__name__)
-app.title = "Timberwolves Dashboard"
+app.title = "NBA Stats"
 # server variable needed for procfile
 server = app.server
 

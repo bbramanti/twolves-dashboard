@@ -16,9 +16,9 @@ logging.info("BEGINNING REFRESH_DATA JOB AT {}".format(datetime.datetime.now()))
 # read in current state of both csv files
 # GAME_ID field may have leading zeroes, so read in as string
 # if season field is not read in as string, will cause issues when dropping duplicates later in script
-curr_games_pulled = pd.read_csv('./data/ytd_timberwolves_games_pulled.csv', dtype={'GAME_ID':str, 'SEASON':str})
+curr_games_pulled = pd.read_csv('./data/timberwolves/ytd_timberwolves_games_pulled.csv', dtype={'GAME_ID':str, 'SEASON':str})
 logging.info("num records in games pulled: {}".format(len(curr_games_pulled)))
-curr_player_boxscore = pd.read_csv('./data/ytd_timberwolves_player_boxscore.csv')
+curr_player_boxscore = pd.read_csv('./data/timberwolves/ytd_timberwolves_player_boxscore.csv')
 logging.info("num records in player boxscore: {}".format(len(curr_player_boxscore)))
 
 # get Minnesota Timberwolves Team ID
@@ -131,8 +131,8 @@ if not timberwolves_games_2020_2021.empty:
     boxscores = boxscores.reindex(columns=column_names)
 
     # append and save files
-    pd.concat([curr_games_pulled,timberwolves_games_2020_2021]).to_csv("./data/ytd_timberwolves_games_pulled.csv", index=False)
-    pd.concat([curr_player_boxscore,boxscores]).to_csv("./data/ytd_timberwolves_player_boxscore.csv", index=False)
+    pd.concat([curr_games_pulled,timberwolves_games_2020_2021]).to_csv("./data/timberwolves/ytd_timberwolves_games_pulled.csv", index=False)
+    pd.concat([curr_player_boxscore,boxscores]).to_csv("./data/timberwolves/ytd_timberwolves_player_boxscore.csv", index=False)
 
 # log to signal end of function execution
 logging.info("ENDING REFRESH_DATA JOB AT {}".format(datetime.datetime.now()))
