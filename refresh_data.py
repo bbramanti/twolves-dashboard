@@ -1,11 +1,12 @@
-import pandas as pd
-import time
-import logging
 import datetime
-from nba_api.stats.static import teams
-from nba_api.stats.endpoints import boxscoretraditionalv2, teamgamelog
+import logging
+import os
+import pandas as pd
+import sys
+import time
 from dateutil.parser import parse
-from retrying import retry
+from nba_api.stats.endpoints import boxscoretraditionalv2, teamgamelog
+from nba_api.stats.static import teams
 
 # configure logger
 logging.basicConfig(level=logging.INFO)
@@ -13,41 +14,47 @@ logging.basicConfig(level=logging.INFO)
 # log to signal beginning of function execution
 logging.info("BEGINNING REFRESH_DATA JOB AT {}".format(datetime.datetime.now()))
 
+# team name must be sent in as argument "python refresh_data timberwolves"
+team = sys.argv[1]
+logging.info(team)
+
+# check if any data exists for that team, if not create folder + data sources
+if not os.path.isdir("./data/{}".format(team)):
+    os.mkdir("./data/{}".format(team))
+    with open('./data/{}/ytd_{}_games_pulled.csv'.format(team, team), 'w') as file_1:
+        file_1.write('GAME_ID,GAME_DATE,SEASON,MATCHUP,WL\n')
+    with open('./data/{}/ytd_{}_player_boxscore.csv'.format(team, team), 'w') as file_2:
+        file_2.write('PLAYER,TEAM,DATE,MATCHUP,W/L,MIN,PTS,FGM,FGA,3PM,3PA,FTM,FTA,OREB,DREB,REB,AST,STL,BLK,TOV,PF,PLUS-MINUS\n')
+
 # read in current state of both csv files
 # GAME_ID field may have leading zeroes, so read in as string
 # if season field is not read in as string, will cause issues when dropping duplicates later in script
-curr_games_pulled = pd.read_csv('./data/timberwolves/ytd_timberwolves_games_pulled.csv', dtype={'GAME_ID':str, 'SEASON':str})
+curr_games_pulled = pd.read_csv('./data/{}/ytd_{}_games_pulled.csv'.format(team, team), dtype={'GAME_ID':str, 'SEASON':str})
 logging.info("num records in games pulled: {}".format(len(curr_games_pulled)))
-curr_player_boxscore = pd.read_csv('./data/timberwolves/ytd_timberwolves_player_boxscore.csv')
+curr_player_boxscore = pd.read_csv('./data/{}/ytd_{}_player_boxscore.csv'.format(team, team))
 logging.info("num records in player boxscore: {}".format(len(curr_player_boxscore)))
 
-# get Minnesota Timberwolves Team ID
+# get Team ID
 teams_data = teams.get_teams()
-minnesota_timberwolves_id = [team for team in teams_data if team['abbreviation'] == 'MIN'][0]['id']
-logging.info("team id: {}".format(minnesota_timberwolves_id))
+team_id = [team_item for team_item in teams_data if team_item['nickname'].lower() == team.lower()][0]['id']
+logging.info("team id: {}".format(team_id))
 
 # calls nba api to get team's game log
-# retry a maximum of 3 times, waiting 5 seconds between each retry
-@retry(stop_max_attempt_number=3, wait_fixed=5000)
 def get_team_game_log(team_id, year):
-    logging.info("trying to get team's game log...")
-    return teamgamelog.TeamGameLog(
-        team_id=team_id,
-        season=year
-    ).get_data_frames()[0]
+    return teamgamelog.TeamGameLog(team_id=team_id,season=year).get_data_frames()[0]
 
-# get timberwolves game log
+# get game log
 pull_year = "2020"
-timberwolves_games_2020_2021 = get_team_game_log(team_id=minnesota_timberwolves_id, year=pull_year)
+games_2020_2021 = get_team_game_log(team_id=team_id, year=pull_year)
 
 # add 'SEASON' column to separate seasons
-timberwolves_games_2020_2021['SEASON'] = pull_year
+games_2020_2021['SEASON'] = pull_year
 
 # select only neccessary data
-timberwolves_games_2020_2021 = timberwolves_games_2020_2021[['Game_ID', 'GAME_DATE', 'SEASON', 'MATCHUP', 'WL']]
+games_2020_2021 = games_2020_2021[['Game_ID', 'GAME_DATE', 'SEASON', 'MATCHUP', 'WL']]
 
 # fix column names
-timberwolves_games_2020_2021.rename(
+games_2020_2021.rename(
     columns={
         'Game_ID': 'GAME_ID'
     },
@@ -55,22 +62,26 @@ timberwolves_games_2020_2021.rename(
 )
 
 # change date column format from MAR 15, 2021 -> 3/15/2021
-timberwolves_games_2020_2021['GAME_DATE'] = timberwolves_games_2020_2021.apply(lambda row : parse(row['GAME_DATE']).strftime('%m/%d/%Y'), axis = 1)
+games_2020_2021['GAME_DATE'] = games_2020_2021.apply(lambda row : parse(row['GAME_DATE']).strftime('%m/%d/%Y'), axis = 1)
 
 # sort by game date instead of game date because date would require parsing back to datetime object
-timberwolves_games_2020_2021.sort_values(by=['GAME_ID'], inplace=True)
+games_2020_2021.sort_values(by=['GAME_ID'], inplace=True)
 
 # remove all records from timberwolves_games_2020_2021 that exist in curr_games_pulled
-timberwolves_games_2020_2021 = pd.concat([timberwolves_games_2020_2021,curr_games_pulled]).drop_duplicates(keep=False)
-logging.info("pulling {} new games".format(len(timberwolves_games_2020_2021)))
+games_2020_2021 = pd.concat([games_2020_2021,curr_games_pulled]).drop_duplicates(keep=False)
+if games_2020_2021.empty:
+    logging.info("pulling {} new games".format(len(games_2020_2021)))
 
-if not timberwolves_games_2020_2021.empty:
+if not games_2020_2021.empty:
+    # pull no more than 5 games at a time
+    games_2020_2021 = games_2020_2021[0:5]
+    logging.info("pulling {} new games".format(len(games_2020_2021)))
 
     # create Dataframe to hold BoxScore data
     boxscores = pd.DataFrame()
 
     # pull each game and append results to dataframe
-    for index, game in timberwolves_games_2020_2021.iterrows():
+    for index, game in games_2020_2021.iterrows():
         logging.info("pulling {} from {} with id {}".format(game['MATCHUP'], game['GAME_DATE'], game['GAME_ID']))
         game_instance = boxscoretraditionalv2.BoxScoreTraditionalV2(game_id=game['GAME_ID']).get_data_frames()[0]
         boxscores = boxscores.append(game_instance)
@@ -78,7 +89,7 @@ if not timberwolves_games_2020_2021.empty:
 
     # remove any records for the opposing team, or players who did not log any minutes
     boxscores = boxscores[
-        (boxscores['TEAM_ID'] == minnesota_timberwolves_id) &
+        (boxscores['TEAM_ID'] == team_id) &
         (boxscores['MIN'].isnull() == False)
     ]
 
@@ -92,7 +103,7 @@ if not timberwolves_games_2020_2021.empty:
     boxscores['MIN'] = boxscores.apply(lambda row : fix_minutes_played(row), axis = 1)
 
     # merge BoxScore with Games data to get date/matchup/win-loss
-    boxscores = boxscores.merge(timberwolves_games_2020_2021, on='GAME_ID', how='left')
+    boxscores = boxscores.merge(games_2020_2021, on='GAME_ID', how='left')
 
     # drop columns that are no longer needed
     boxscores.drop(
@@ -131,8 +142,8 @@ if not timberwolves_games_2020_2021.empty:
     boxscores = boxscores.reindex(columns=column_names)
 
     # append and save files
-    pd.concat([curr_games_pulled,timberwolves_games_2020_2021]).to_csv("./data/timberwolves/ytd_timberwolves_games_pulled.csv", index=False)
-    pd.concat([curr_player_boxscore,boxscores]).to_csv("./data/timberwolves/ytd_timberwolves_player_boxscore.csv", index=False)
+    pd.concat([curr_games_pulled,games_2020_2021]).to_csv("./data/{}/ytd_{}_games_pulled.csv".format(team, team), index=False)
+    pd.concat([curr_player_boxscore,boxscores]).to_csv("./data/{}/ytd_{}_player_boxscore.csv".format(team, team), index=False)
 
 # log to signal end of function execution
 logging.info("ENDING REFRESH_DATA JOB AT {}".format(datetime.datetime.now()))
