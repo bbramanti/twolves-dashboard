@@ -7,6 +7,7 @@ import dash_html_components as html
 from dash.dependencies import Output, Input
 import plotly.express as px
 import random
+import logging
 
 # read dataset into pandas dataframe from csv file
 data = pd.read_csv("./data/timberwolves/ytd_timberwolves_player_boxscore.csv")
@@ -140,7 +141,6 @@ app.layout = html.Div(
                         y="MIN",
                         color="PLUS-MINUS",
                         color_continuous_scale=["red", "green"],
-                        color_discrete_sequence=px.colors.qualitative.Light24,
                         title='Minutes vs. +/- (YTD)',
                         custom_data = ["MATCHUP", "W/L", "PLAYER", "PLUS-MINUS"],
                         template = 'plotly_dark'
@@ -166,7 +166,27 @@ app.layout = html.Div(
                             )
                     )
                 ),
-                html.H1(className="record-title", children=["Record: ({} - {})".format(wins, losses)]),
+                html.H1(className="chart-title", children=["Season Totals"]),
+                dcc.Dropdown(
+                    id = "season-totals-filter",
+                    options = [
+                        {
+                            "label": "Points", "value": "PTS"
+                        },
+                        {
+                            "label": "Rebounds", "value": "REB"
+                        },
+                        {
+                            "label": "Assists", "value": "AST"
+                        }
+                    ],
+                    value = "PTS",
+                    clearable = False,
+                    searchable=False,
+                    className = "dropdown"
+                ),
+                dcc.Graph(id="season-totals-chart"),
+                html.H1(className="record-title", children=["Record: ({} - {})".format(wins, losses)])
             ]
         )
     ]
@@ -264,6 +284,24 @@ def update_table(game):
         },
     ]
     return filtered_data.to_dict('records'), style_data_conditional
+
+@app.callback(
+    Output("season-totals-chart", "figure"),
+    Input("season-totals-filter", "value")
+)
+def generate_chart(value):
+    fig = px.pie(data, names="PLAYER", values=value, template='plotly_dark', color_discrete_sequence=px.colors.qualitative.Light24)
+    hover_values = {
+        "PTS": "Points",
+        "REB": "Rebounds",
+        "AST": "Assists",
+    }
+    fig.update_traces(
+        hovertemplate = '<b>' + "%{label}" + '</b>'
+                        '<br><b>' + hover_values[value] + '</b>: %{value}'
+
+    )
+    return fig
 
 if __name__ == "__main__":
     app.run_server(debug=False)
