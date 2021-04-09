@@ -1,2 +1,2 @@
 Hosted on Heroku at:
-https://twolves-dashboard-bbramanti.herokuapp.com/
+https://nba-dashboard-bbramanti.herokuapp.com/
