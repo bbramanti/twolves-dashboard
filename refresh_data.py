@@ -65,7 +65,7 @@ games_2020_2021.rename(
 games_2020_2021['GAME_DATE'] = games_2020_2021.apply(lambda row : parse(row['GAME_DATE']).strftime('%m/%d/%Y'), axis = 1)
 
 # sort by game date instead of game date because date would require parsing back to datetime object
-games_2020_2021.sort_values(by=['GAME_ID'], inplace=True)
+games_2020_2021.sort_values(by=['GAME_DATE'], inplace=True)
 
 # remove all records from timberwolves_games_2020_2021 that exist in curr_games_pulled
 games_2020_2021 = pd.concat([games_2020_2021,curr_games_pulled]).drop_duplicates(keep=False)
