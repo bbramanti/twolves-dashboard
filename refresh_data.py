@@ -64,7 +64,7 @@ games_2020_2021.rename(
 # change date column format from MAR 15, 2021 -> 3/15/2021
 games_2020_2021['GAME_DATE'] = games_2020_2021.apply(lambda row : parse(row['GAME_DATE']).strftime('%m/%d/%Y'), axis = 1)
 
-# sort by game date instead of game date because date would require parsing back to datetime object
+# sort by game date
 games_2020_2021.sort_values(by=['GAME_DATE'], inplace=True)
 
 # remove all records from timberwolves_games_2020_2021 that exist in curr_games_pulled
